@@ -1,0 +1,59 @@
+<!-- mvn compile exec:java -->
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/jpeg" href="poll_logo.jpg" class="rounded-full fill">
+    <title>Créer un Sondage</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-300 min-h-screen mx-2 flex flex-col items-center justify-start">
+    <div id="toaster" class="fixed top-4 right-0 transform  z-50 w-full max-w-xs sm:max-w-md px-2"></div>
+    <div class="w-full max-w-xl sm:mt-16 mt-4 bg-white shadow-lg rounded-lg p-4 sm:p-8 mx-2">
+        <h1 class="text-2xl font-bold mb-6 text-center">Créer un nouveau sondage</h1>
+        <form action="/create-poll" method="post" class="space-y-4" id="poll-form">
+            <div>
+                <label for="question" class="block font-semibold mb-1">Votre question :</label>
+                <input type="text" id="question" name="question" required class="border rounded w-full px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1">Options de réponse :</label>
+                <div class="options-container flex flex-col gap-2" id="options-container">
+                    <input type="text" name="options" placeholder="Option 1" required class="border rounded px-3 py-2">
+                    <input type="text" name="options" placeholder="Option 2" required class="border rounded px-3 py-2">
+                </div>
+                <button type="button" onclick="addOption()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition w-full sm:w-auto"> Ajouter une option <i class="border-2 border-white text-white rounded-full px-2 pb-1 font-bold text-lg">+</i></button>
+            </div>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded w-full font-bold hover:bg-green-600 transition">Créer le sondage</button>
+        </form>
+    </div>
+    <script>
+        function showToast(message, type = "success") {
+            const toaster = document.getElementById('toaster');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded shadow text-black text-lg bg-white mb-2 animate-fade-in text-center text-sm sm:text-base ${type === "success" ? "border-green-500 border-4" : "border-red-500 border-2"}`;
+            toast.innerText = message;
+            toaster.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function addOption() {
+            const container = document.getElementById('options-container');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'options';
+            input.placeholder = 'Option ' + (container.children.length + 1);
+            input.required = true;
+            input.className = "border rounded px-3 py-2";
+            container.appendChild(input);
+        }
+    </script>
+    <style>
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.5s; }
+    </style>
+</body>
+</html>

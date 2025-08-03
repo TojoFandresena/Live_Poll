@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/jpeg" href="poll_logo.jpg">
+    <title>Votez !</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-300 mx-2 min-h-screen flex flex-col items-center justify-start">
+    <div id="toaster" class="fixed top-4 right-0 transform z-50 w-full max-w-xs sm:max-w-md px-2"></div>
+    <div class="w-full max-w-xl sm:mt-16 mt-4 bg-white shadow-lg rounded-lg p-4 sm:p-8 mx-2">
+        <h1 id="question" class="text-2xl font-bold mb-6 text-center">Chargement...</h1>
+        <div id="options" class="flex flex-col gap-4"></div>
+        <p class="mt-6 text-gray-500 text-center text-sm sm:text-base"><i>Voir les <a id="results-link" href="#" class="text-blue-500 underline">résultats en direct</a>.</i></p>
+    </div>
+    <script>
+        function showToast(message, type = "success") {
+            const toaster = document.getElementById('toaster');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded shadow text-black text-lg bg-white mb-2 animate-fade-in text-center text-sm sm:text-base ${type === "success" ? "border-green-500 border-4" : "border-red-500 border-2"}`;
+            toast.innerText = message;
+            toaster.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const pollId = params.get('id');
+        let selectedOption = localStorage.getItem('voted-option-' + pollId) || null;
+
+        async function submitVote(option, button) {
+            if (selectedOption) return; // Already voted, ignore further clicks
+
+            const formData = new URLSearchParams();
+            formData.append('option', option);
+
+            const response = await fetch(`/api/poll/${pollId}/vote`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                showToast('Merci pour votre vote !', "success");
+                localStorage.setItem('voted-' + pollId, 'true');
+                localStorage.setItem('voted-option-' + pollId, option);
+                selectedOption = option;
+                updateButtonsState();
+            } else {
+                const msg = await response.text();
+                showToast(msg, "error");
+            }
+        }
+
+        function updateButtonsState() {
+            const buttons = document.querySelectorAll('#options button');
+            buttons.forEach(btn => {
+                if (btn.dataset.option === selectedOption) {
+                    btn.disabled = true;
+                    btn.className = "bg-green-600 text-white px-6 py-3 rounded font-bold text-lg border-4 border-green-700 cursor-default transition";
+                } else {
+                    btn.disabled = true;
+                    btn.className = "bg-gray-300 text-gray-400 px-6 py-3 rounded font-bold text-lg border-2 border-gray-400 cursor-not-allowed transition";
+                }
+            });
+        }
+
+        async function loadPoll() {
+            if (!pollId) {
+                document.getElementById('question').innerText = "ID de sondage manquant !";
+                return;
+            }
+            document.getElementById('results-link').href = `/results.html?id=${pollId}`;
+            const response = await fetch(`/api/poll/${pollId}`);
+            if (!response.ok) {
+                document.getElementById('question').innerText = "Sondage non trouvé.";
+                return;
+            }
+            const poll = await response.json();
+            document.getElementById('question').innerText = poll.question;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = "";
+
+            const alreadyVoted = localStorage.getItem('voted-' + pollId) === 'true';
+            selectedOption = localStorage.getItem('voted-option-' + pollId) || null;
+
+            poll.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.type = "button";
+                button.dataset.option = option;
+                button.className = "bg-blue-500 text-white px-6 py-3 rounded font-bold text-lg hover:bg-blue-600 border-2 border-blue-700 transition";
+                if (alreadyVoted) {
+                    if (selectedOption === option) {
+                        button.disabled = true;
+                        button.className = "bg-green-600 text-white px-6 py-3 rounded font-bold text-lg border-4 border-green-700 cursor-default transition";
+                    } else {
+                        button.disabled = true;
+                        button.className = "bg-gray-300 text-gray-400 px-6 py-3 rounded font-bold text-lg border-2 border-gray-400 cursor-not-allowed transition";
+                    }
+                } else {
+                    button.onclick = () => submitVote(option, button);
+                }
+                optionsDiv.appendChild(button);
+            });
+
+            if (alreadyVoted) {
+                showToast("Vous avez déjà participé à ce sondage.", "success");
+            }
+        }
+
+        loadPoll();
+    </script>
+    <style>
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.5s; }
+    </style>
+</body>
+</html>

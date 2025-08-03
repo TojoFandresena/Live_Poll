@@ -1,0 +1,24 @@
+# Fichiers compilés par Maven
+/target/
+/pom.xml.tag
+/pom.xml.releaseBackup
+/pom.xml.versionsBackup
+/release.properties
+
+# Fichiers générés par l'IDE (IntelliJ, Eclipse, VSCode, etc.)
+.project
+.classpath
+.settings/
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+nbproject/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
